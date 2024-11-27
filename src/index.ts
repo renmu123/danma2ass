@@ -47,6 +47,8 @@ interface Options {
   shadow?: number;
   /** 描边 */
   outline?: number;
+  /** 间距 */
+  margin?: number;
 }
 
 interface AssLine {
@@ -84,6 +86,7 @@ export default class AssGenerator {
       opacity: 0,
       shadow: 0.0,
       outline: 0.0,
+      margin: 20,
     };
     this.options = Object.assign(defaultOptions, options);
 
@@ -122,9 +125,12 @@ export default class AssGenerator {
     return baseAss + assLines.join("\n");
   }
 
+  /**
+   * @description 生成滚动弹幕
+   */
   generateMoveLine(item: Item): AssLine {
     const { width } = this.measureText(item.text);
-    const color = this.converColor(item.color);
+    const color = this.convertColor(item.color);
     const startPosX = this.options.width + 10;
     const endPosX = -(width + item.text.length);
 
@@ -140,6 +146,9 @@ export default class AssGenerator {
     };
   }
 
+  /**
+   * @description 生成顶部固定弹幕
+   */
   generateTopLine(item: Item): AssLine {
     const { width } = this.measureText(item.text);
     const posX = (this.options.width - width) / 2;
@@ -147,7 +156,7 @@ export default class AssGenerator {
     const endTime = item.ts + this.options.fixedDuration;
     let posY = 0;
 
-    const color = this.converColor(item.color);
+    const color = this.convertColor(item.color);
 
     // 确定不冲突的位置
     while (
@@ -177,6 +186,9 @@ export default class AssGenerator {
     };
   }
 
+  /**
+   * @description 生成底部固定弹幕
+   */
   generateBottomLine(item: Item): AssLine {
     const { width } = this.measureText(item.text);
     const posX = (this.options.width - width) / 2;
@@ -184,7 +196,7 @@ export default class AssGenerator {
     const endTime = item.ts + this.options.fixedDuration;
     let posY = this.options.height - this.lineDistance;
 
-    const color = this.converColor(item.color);
+    const color = this.convertColor(item.color);
 
     // 确定不冲突的位置
     while (
@@ -213,11 +225,17 @@ export default class AssGenerator {
     };
   }
 
+  /**
+   * @description 判断两个时间段是否有重叠
+   */
   isTimeOverlap(pos: AssLine, startTime: number, endTime: number): boolean {
     return !(endTime <= pos.startTime || startTime >= pos.endTime);
   }
 
-  converColor(color?: string) {
+  /**
+   * @description 转换颜色
+   */
+  convertColor(color?: string) {
     if (color) {
       const bgrColor = RGB2BGR(color);
       const opacity = decimalToHex(this.options.opacity);
@@ -227,10 +245,16 @@ export default class AssGenerator {
     }
   }
 
+  /**
+   * @description 测量文本宽度
+   */
   measureText(text: string) {
     return { width: text.length * 16, height: this.lineDistance };
   }
 
+  /**
+   * @description 生成ass行
+   */
   generateAssLine(options: {
     startTime: number;
     endTime: number;
@@ -253,6 +277,9 @@ export default class AssGenerator {
     return `Dialogue: ${layer},${startTimemark},${endTimemark},${style},,0000,0000,0000,,${text}`;
   }
 
+  /**
+   * @description 生成ass头
+   */
   generateBaseAss() {
     const bold = this.options.bold ? 1 : 0;
     const italic = this.options.italic ? 1 : 0;
@@ -294,7 +321,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
    * @description 弹幕间距
    */
   get margin() {
-    return 20;
+    return this.options.margin;
   }
 
   /**
