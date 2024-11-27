@@ -153,11 +153,11 @@ export default class AssGenerator {
     while (
       this.occupiedPositions.TOP.some(
         (pos) =>
-          Math.abs(pos.posY - posY) < 20 &&
+          Math.abs(pos.posY - posY) < this.lineDistance &&
           this.isTimeOverlap(pos, startTime, endTime)
       )
     ) {
-      posY += 20;
+      posY += this.lineDistance;
     }
 
     // 删除已经处理过且不再冲突的数据
@@ -178,11 +178,11 @@ export default class AssGenerator {
   }
 
   generateBottomLine(item: Item): AssLine {
-    const { width, height } = this.measureText(item.text);
+    const { width } = this.measureText(item.text);
     const posX = (this.options.width - width) / 2;
     const startTime = item.ts;
     const endTime = item.ts + this.options.fixedDuration;
-    let posY = this.options.height - height;
+    let posY = this.options.height - this.lineDistance;
 
     const color = this.converColor(item.color);
 
@@ -190,11 +190,11 @@ export default class AssGenerator {
     while (
       this.occupiedPositions.BTM.some(
         (pos) =>
-          Math.abs(pos.posY - posY) < 20 &&
+          Math.abs(pos.posY - posY) < this.lineDistance &&
           this.isTimeOverlap(pos, startTime, endTime)
       )
     ) {
-      posY -= 20;
+      posY -= this.lineDistance;
     }
 
     // 删除已经处理过且不再冲突的数据
@@ -228,7 +228,7 @@ export default class AssGenerator {
   }
 
   measureText(text: string) {
-    return { width: text.length * 16, height: 16 };
+    return { width: text.length * 16, height: this.lineDistance };
   }
 
   generateAssLine(options: {
@@ -288,5 +288,26 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
 `;
 
     return scriptInfo + v4Styles + events;
+  }
+
+  /**
+   * @description 弹幕间距
+   */
+  get margin() {
+    return 20;
+  }
+
+  /**
+   * @description 弹幕高度
+   */
+  get lineHeight() {
+    return 20;
+  }
+
+  /**
+   * @description 弹幕距离
+   */
+  get lineDistance() {
+    return this.lineHeight + this.margin;
   }
 }
