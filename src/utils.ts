@@ -15,16 +15,17 @@ export function RGB2BGR(rgb: string) {
  * @returns 16进制字符串
  * @example
  * 255 => ff
+ * 0 => 00
  */
 export function decimalToHex(decimal: number): string {
-  return decimal.toString(16);
+  return decimal.toString(16).padStart(2, "0");
 }
 
 /**
  * Convert seconds into hh:mm:ss.xxx timemark
  *
  * @param {String} seconds seconds
- * @return Number
+ * @return string
  */
 export function secondsToTimemark(seconds: number): string {
   const hours = Math.floor(seconds / 3600);

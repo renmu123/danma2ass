@@ -28,8 +28,8 @@ describe("decimalToHex", () => {
     expect(decimalToHex(255)).toBe("ff");
   });
 
-  it("should convert 0 to 0", () => {
-    expect(decimalToHex(0)).toBe("0");
+  it("should convert 0 to 00", () => {
+    expect(decimalToHex(0)).toBe("00");
   });
 
   it("should convert 16 to 10", () => {
@@ -37,7 +37,7 @@ describe("decimalToHex", () => {
   });
 
   it("should convert 10 to a", () => {
-    expect(decimalToHex(10)).toBe("a");
+    expect(decimalToHex(10)).toBe("0a");
   });
 
   it("should convert 4095 to fff", () => {

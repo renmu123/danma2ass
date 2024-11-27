@@ -61,6 +61,13 @@ interface AssLine {
 export default class AssGenerator {
   data: Item[];
   options: Required<Options>;
+  occupiedPositions: {
+    TOP: AssLine[];
+    BTM: AssLine[];
+  } = {
+    TOP: [],
+    BTM: [],
+  };
 
   constructor(data: Item[], options: Options) {
     const defaultOptions = {
@@ -90,13 +97,6 @@ export default class AssGenerator {
   convert() {
     const assLines: string[] = [];
     const baseAss = this.generateBaseAss();
-    const occupiedPositions: {
-      TOP: AssLine[];
-      BTM: AssLine[];
-    } = {
-      TOP: [],
-      BTM: [],
-    };
 
     for (const item of this.data) {
       let assLine: AssLine;
@@ -105,16 +105,19 @@ export default class AssGenerator {
           assLine = this.generateMoveLine(item);
           break;
         case typeEnum.TOP:
-          assLine = this.generateTopLine(item, occupiedPositions.TOP);
-          occupiedPositions.TOP.push(assLine);
+          assLine = this.generateTopLine(item);
+          this.occupiedPositions.TOP.push(assLine);
           break;
         case typeEnum.BTM:
-          assLine = this.generateBottomLine(item, occupiedPositions.BTM);
-          occupiedPositions.BTM.push(assLine);
+          assLine = this.generateBottomLine(item);
+          this.occupiedPositions.BTM.push(assLine);
           break;
       }
       assLines.push(this.generateAssLine(assLine));
     }
+
+    this.occupiedPositions.TOP = [];
+    this.occupiedPositions.BTM = [];
 
     return baseAss + assLines.join("\n");
   }
@@ -137,7 +140,7 @@ export default class AssGenerator {
     };
   }
 
-  generateTopLine(item: Item, occupiedPositions: any[]): AssLine {
+  generateTopLine(item: Item): AssLine {
     const { width } = this.measureText(item.text);
     const posX = (this.options.width - width) / 2;
     const startTime = item.ts;
@@ -148,7 +151,7 @@ export default class AssGenerator {
 
     // 确定不冲突的位置
     while (
-      occupiedPositions.some(
+      this.occupiedPositions.TOP.some(
         (pos) =>
           Math.abs(pos.posY - posY) < 20 &&
           this.isTimeOverlap(pos, startTime, endTime)
@@ -158,9 +161,10 @@ export default class AssGenerator {
     }
 
     // 删除已经处理过且不再冲突的数据
-    occupiedPositions = occupiedPositions.filter(
+    this.occupiedPositions.TOP = this.occupiedPositions.TOP.filter(
       (pos) => pos.endTime > startTime
     );
+    // console.log(111, { occupiedPositions });
 
     const text = `{\\pos(${posX},${posY})}${color}${item.text}`;
     return {
@@ -173,7 +177,7 @@ export default class AssGenerator {
     };
   }
 
-  generateBottomLine(item: Item, occupiedPositions: any[]): AssLine {
+  generateBottomLine(item: Item): AssLine {
     const { width, height } = this.measureText(item.text);
     const posX = (this.options.width - width) / 2;
     const startTime = item.ts;
@@ -184,7 +188,7 @@ export default class AssGenerator {
 
     // 确定不冲突的位置
     while (
-      occupiedPositions.some(
+      this.occupiedPositions.BTM.some(
         (pos) =>
           Math.abs(pos.posY - posY) < 20 &&
           this.isTimeOverlap(pos, startTime, endTime)
@@ -194,7 +198,7 @@ export default class AssGenerator {
     }
 
     // 删除已经处理过且不再冲突的数据
-    occupiedPositions = occupiedPositions.filter(
+    this.occupiedPositions.BTM = this.occupiedPositions.BTM.filter(
       (pos) => pos.endTime > startTime
     );
 
@@ -217,7 +221,7 @@ export default class AssGenerator {
     if (color) {
       const bgrColor = RGB2BGR(color);
       const opacity = decimalToHex(this.options.opacity);
-      return `{\\c&${opacity}${bgrColor.replace("#", "")}}`;
+      return `{\\c&H${opacity}${bgrColor.replace("#", "")}}`;
     } else {
       return "";
     }
@@ -237,7 +241,7 @@ export default class AssGenerator {
     const { startTime, endTime, style, text, layer } = options;
 
     let shiftStartTime = startTime + this.options.timeshift;
-    let shiftEndTime = endTime + options.endTime;
+    let shiftEndTime = endTime + this.options.timeshift;
     if (shiftStartTime < 0) {
       shiftStartTime = 0;
       shiftEndTime = endTime;

@@ -65,13 +65,51 @@ describe("AssGenerator", () => {
     const generator = new AssGenerator(data, options);
     const ass = generator.convert();
     expect(ass).toContain(
-      "Dialogue: 0,0:00:01.00,0:00:11.00,R2L,,0000,0000,0000,,{\\move(1290,1,-70,1)}{\\c&H00FF0000}Hello"
+      "Dialogue: 0,00:00:01.000,00:00:11.000,R2L,,0000,0000,0000,,{\\move(1290,1,-85,1)}{\\c&H000000FF}Hello"
     );
     expect(ass).toContain(
-      "Dialogue: 1,0:00:02.00,0:00:07.00,TOP,,0000,0000,0000,,{\\pos(620,0)}{\\c&H0000FF00}World"
+      "Dialogue: 1,00:00:02.000,00:00:07.000,TOP,,0000,0000,0000,,{\\pos(600,0)}{\\c&H0000FF00}World"
     );
     expect(ass).toContain(
-      "Dialogue: 1,0:00:03.00,0:00:08.00,BTM,,0000,0000,0000,,{\\pos(620,704)}{\\c&H000000FF}Test"
+      "Dialogue: 1,00:00:03.000,00:00:08.000,BTM,,0000,0000,0000,,{\\pos(608,704)}{\\c&H00FF0000}Test"
+    );
+  });
+  it("should convert data with overlap BTM type", () => {
+    const data: Item[] = [
+      { ts: 1, text: "Hello", type: typeEnum.BTM, color: "#FF0000" },
+      { ts: 2, text: "Hello", type: typeEnum.BTM, color: "#FF0000" },
+      { ts: 3, text: "Hello", type: typeEnum.BTM, color: "#FF0000" },
+    ];
+    const generator = new AssGenerator(data, options);
+    const ass = generator.convert();
+    console.log(ass);
+    expect(ass).toContain(
+      "Dialogue: 1,00:00:01.000,00:00:06.000,BTM,,0000,0000,0000,,{\\pos(600,704)}{\\c&H000000FF}Hello"
+    );
+    expect(ass).toContain(
+      "Dialogue: 1,00:00:02.000,00:00:07.000,BTM,,0000,0000,0000,,{\\pos(600,684)}{\\c&H000000FF}Hello"
+    );
+    expect(ass).toContain(
+      "Dialogue: 1,00:00:03.000,00:00:08.000,BTM,,0000,0000,0000,,{\\pos(600,664)}{\\c&H000000FF}Hello"
+    );
+  });
+
+  it("should convert data with overlap TOP type", () => {
+    const data: Item[] = [
+      { ts: 1, text: "Hello", type: typeEnum.TOP, color: "#FF0000" },
+      { ts: 2, text: "Hello", type: typeEnum.TOP, color: "#FF0000" },
+      { ts: 10, text: "Hello", type: typeEnum.TOP, color: "#FF0000" },
+    ];
+    const generator = new AssGenerator(data, options);
+    const ass = generator.convert();
+    expect(ass).toContain(
+      "Dialogue: 1,00:00:01.000,00:00:06.000,TOP,,0000,0000,0000,,{\\pos(600,0)}{\\c&H000000FF}Hello"
+    );
+    expect(ass).toContain(
+      "Dialogue: 1,00:00:02.000,00:00:07.000,TOP,,0000,0000,0000,,{\\pos(600,20)}{\\c&H000000FF}Hello"
+    );
+    expect(ass).toContain(
+      "Dialogue: 1,00:00:10.000,00:00:15.000,TOP,,0000,0000,0000,,{\\pos(600,0)}{\\c&H000000FF}Hello"
     );
   });
 });
