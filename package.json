@@ -1,0 +1,19 @@
+{
+  "name": "danma2ass",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./lib/index.js",
+  "scripts": {
+    "build": "pnpm run test && pnpm run typecheck && tsc",
+    "dev": "tsc -w"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.4",
+    "prettier": "^3.3.3"
+  }
+}
