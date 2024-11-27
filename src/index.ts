@@ -1,6 +1,6 @@
 import { RGB2BGR, decimalToHex, secondsToTimemark } from "./utils.js";
 
-interface Item {
+export interface Item {
   /** 相对时间戳 */
   ts: number;
   /** 文字 */
@@ -11,7 +11,7 @@ interface Item {
   color?: string;
 }
 
-const enum typeEnum {
+export const enum typeEnum {
   /** 从右至左滚动 */
   R2L = "R2L",
   /** 上方固定 */
@@ -49,7 +49,16 @@ interface Options {
   outline?: number;
 }
 
-class AssGenerator {
+interface AssLine {
+  startTime: number;
+  endTime: number;
+  style: typeEnum;
+  text: string;
+  layer: number;
+  posY?: number;
+}
+
+export default class AssGenerator {
   data: Item[];
   options: Required<Options>;
 
@@ -78,12 +87,39 @@ class AssGenerator {
     return data.toSorted((a, b) => a.ts - b.ts);
   }
 
-  convert() {}
+  convert() {
+    const assLines: string[] = [];
+    const baseAss = this.generateBaseAss();
+    const occupiedPositions: {
+      TOP: AssLine[];
+      BTM: AssLine[];
+    } = {
+      TOP: [],
+      BTM: [],
+    };
 
-  /**
-   * 生成从左至右移动的ass行
-   */
-  generateMoveLine(item: Item) {
+    for (const item of this.data) {
+      let assLine: AssLine;
+      switch (item.type) {
+        case typeEnum.R2L:
+          assLine = this.generateMoveLine(item);
+          break;
+        case typeEnum.TOP:
+          assLine = this.generateTopLine(item, occupiedPositions.TOP);
+          occupiedPositions.TOP.push(assLine);
+          break;
+        case typeEnum.BTM:
+          assLine = this.generateBottomLine(item, occupiedPositions.BTM);
+          occupiedPositions.BTM.push(assLine);
+          break;
+      }
+      assLines.push(this.generateAssLine(assLine));
+    }
+
+    return baseAss + assLines.join("\n");
+  }
+
+  generateMoveLine(item: Item): AssLine {
     const { width } = this.measureText(item.text);
     const color = this.converColor(item.color);
     const startPosX = this.options.width + 10;
@@ -101,50 +137,82 @@ class AssGenerator {
     };
   }
 
-  /**
-   * 生成上固定的ass行
-   */
-  generateTopLine(item: Item) {
+  generateTopLine(item: Item, occupiedPositions: any[]): AssLine {
     const { width } = this.measureText(item.text);
     const posX = (this.options.width - width) / 2;
-    const posY = 0;
+    const startTime = item.ts;
+    const endTime = item.ts + this.options.fixedDuration;
+    let posY = 0;
 
     const color = this.converColor(item.color);
 
-    // TODO: 和上范围有关，也和同时段是否有相同的弹幕有关
+    // 确定不冲突的位置
+    while (
+      occupiedPositions.some(
+        (pos) =>
+          Math.abs(pos.posY - posY) < 20 &&
+          this.isTimeOverlap(pos, startTime, endTime)
+      )
+    ) {
+      posY += 20;
+    }
+
+    // 删除已经处理过且不再冲突的数据
+    occupiedPositions = occupiedPositions.filter(
+      (pos) => pos.endTime > startTime
+    );
+
     const text = `{\\pos(${posX},${posY})}${color}${item.text}`;
     return {
-      startTime: item.ts,
-      endTime: item.ts + this.options.fixedDuration,
+      startTime: startTime,
+      endTime: endTime,
       style: item.type,
       text,
       layer: 1,
+      posY: posY, // 记录位置
     };
   }
 
-  /**
-   * 生成下固定的ass行
-   */
-  generateBottomLine(item: Item) {
+  generateBottomLine(item: Item, occupiedPositions: any[]): AssLine {
     const { width, height } = this.measureText(item.text);
     const posX = (this.options.width - width) / 2;
-    const posY = this.options.height - height;
+    const startTime = item.ts;
+    const endTime = item.ts + this.options.fixedDuration;
+    let posY = this.options.height - height;
+
     const color = this.converColor(item.color);
 
-    // TODO: 和下范围有关，也和同时段是否有相同的弹幕有关
+    // 确定不冲突的位置
+    while (
+      occupiedPositions.some(
+        (pos) =>
+          Math.abs(pos.posY - posY) < 20 &&
+          this.isTimeOverlap(pos, startTime, endTime)
+      )
+    ) {
+      posY -= 20;
+    }
+
+    // 删除已经处理过且不再冲突的数据
+    occupiedPositions = occupiedPositions.filter(
+      (pos) => pos.endTime > startTime
+    );
+
     const text = `{\\pos(${posX},${posY})}${color}${item.text}`;
     return {
-      startTime: item.ts,
-      endTime: item.ts + this.options.fixedDuration,
+      startTime: startTime,
+      endTime: endTime,
       style: item.type,
       text,
       layer: 1,
+      posY: posY, // 记录位置
     };
   }
 
-  /**
-   * 生成ass颜色字符
-   */
+  isTimeOverlap(pos: AssLine, startTime: number, endTime: number): boolean {
+    return !(endTime <= pos.startTime || startTime >= pos.endTime);
+  }
+
   converColor(color?: string) {
     if (color) {
       const bgrColor = RGB2BGR(color);
@@ -155,16 +223,10 @@ class AssGenerator {
     }
   }
 
-  /**
-   * 估算字符串宽度和高度
-   */
   measureText(text: string) {
     return { width: text.length * 16, height: 16 };
   }
 
-  /**
-   * 生成ass一行
-   */
   generateAssLine(options: {
     startTime: number;
     endTime: number;
@@ -187,9 +249,6 @@ class AssGenerator {
     return `Dialogue: ${layer},${startTimemark},${endTimemark},${style},,0000,0000,0000,,${text}`;
   }
 
-  /**
-   * 生成ass头文件
-   */
   generateBaseAss() {
     const bold = this.options.bold ? 1 : 0;
     const italic = this.options.italic ? 1 : 0;
