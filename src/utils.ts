@@ -10,6 +10,25 @@ export function RGB2BGR(rgb: string) {
 }
 
 /**
+ * 将颜色的十六进制字符串转换为整数
+ * @param {string} hexColor - 十六进制颜色字符串
+ * @returns {number} - 整数表示的颜色
+ */
+export function hexColorToInt(hexColor: string): number {
+  return parseInt(hexColor.replace("#", ""), 16);
+}
+
+/**
+ * 将整数转换为颜色的十六进制字符串
+ * @param {number} int - 整数表示的颜色
+ * @returns {string} - 十六进制颜色字符串
+ */
+export function intToHexColor(int: number): string {
+  const hex = int.toString(16).padStart(6, "0");
+  return `#${hex}`;
+}
+
+/**
  * 10进制转16进制
  * @param decimal 10进制数
  * @returns 16进制字符串
@@ -36,7 +55,9 @@ export function secondsToTimemark(seconds: number): string {
   const hoursStr = hours.toString().padStart(2, "0");
   const minutesStr = minutes.toString().padStart(2, "0");
   const secondsStr = secs.toString().padStart(2, "0");
-  const millisecondsStr = milliseconds.toString().padStart(3, "0");
+  const millisecondsStr = Math.floor(milliseconds / 10)
+    .toString()
+    .padStart(2, "0");
 
   return `${hoursStr}:${minutesStr}:${secondsStr}.${millisecondsStr}`;
 }

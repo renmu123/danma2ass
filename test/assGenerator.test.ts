@@ -1,7 +1,8 @@
 import { describe, it, expect } from "vitest";
-import AssGenerator, { typeEnum } from "../src/index.js";
+import AssGenerator from "../src/assGenerator.js";
 
-import type { Item } from "../src/index.js";
+import { typeEnum } from "../src/types.js";
+import type { Item } from "../src/types.js";
 
 describe("AssGenerator", () => {
   const data: Item[] = [
@@ -65,13 +66,13 @@ describe("AssGenerator", () => {
     const generator = new AssGenerator(data, options);
     const ass = generator.convert();
     expect(ass).toContain(
-      "Dialogue: 0,00:00:01.000,00:00:11.000,R2L,,0000,0000,0000,,{\\move(1930,1,-85,1)}{\\c&H000000FF}Hello"
+      "Dialogue: 0,00:00:01.00,00:00:11.00,R2L,,0000,0000,0000,,{\\move(1930,1,-85,1)}{\\c&H000000FF}Hello"
     );
     expect(ass).toContain(
-      "Dialogue: 1,00:00:02.000,00:00:07.000,TOP,,0000,0000,0000,,{\\pos(920,0)}{\\c&H0000FF00}World"
+      "Dialogue: 1,00:00:02.00,00:00:07.00,TOP,,0000,0000,0000,,{\\pos(920,0)}{\\c&H0000FF00}World"
     );
     expect(ass).toContain(
-      "Dialogue: 1,00:00:03.000,00:00:08.000,BTM,,0000,0000,0000,,{\\pos(928,1040)}{\\c&H00FF0000}Test"
+      "Dialogue: 1,00:00:03.00,00:00:08.00,BTM,,0000,0000,0000,,{\\pos(928,1040)}{\\c&H00FF0000}Test"
     );
   });
   it("should convert data with overlap BTM type", () => {
@@ -82,15 +83,14 @@ describe("AssGenerator", () => {
     ];
     const generator = new AssGenerator(data, options);
     const ass = generator.convert();
-    console.log(ass);
     expect(ass).toContain(
-      "Dialogue: 1,00:00:01.000,00:00:06.000,BTM,,0000,0000,0000,,{\\pos(920,1040)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,00:00:01.00,00:00:06.00,BTM,,0000,0000,0000,,{\\pos(920,1040)}{\\c&H000000FF}Hello"
     );
     expect(ass).toContain(
-      "Dialogue: 1,00:00:02.000,00:00:07.000,BTM,,0000,0000,0000,,{\\pos(920,1000)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,00:00:02.00,00:00:07.00,BTM,,0000,0000,0000,,{\\pos(920,1000)}{\\c&H000000FF}Hello"
     );
     expect(ass).toContain(
-      "Dialogue: 1,00:00:03.000,00:00:08.000,BTM,,0000,0000,0000,,{\\pos(920,960)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,00:00:03.00,00:00:08.00,BTM,,0000,0000,0000,,{\\pos(920,960)}{\\c&H000000FF}Hello"
     );
   });
 
@@ -103,13 +103,13 @@ describe("AssGenerator", () => {
     const generator = new AssGenerator(data, options);
     const ass = generator.convert();
     expect(ass).toContain(
-      "Dialogue: 1,00:00:01.000,00:00:06.000,TOP,,0000,0000,0000,,{\\pos(920,0)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,00:00:01.00,00:00:06.00,TOP,,0000,0000,0000,,{\\pos(920,0)}{\\c&H000000FF}Hello"
     );
     expect(ass).toContain(
-      "Dialogue: 1,00:00:02.000,00:00:07.000,TOP,,0000,0000,0000,,{\\pos(920,40)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,00:00:02.00,00:00:07.00,TOP,,0000,0000,0000,,{\\pos(920,40)}{\\c&H000000FF}Hello"
     );
     expect(ass).toContain(
-      "Dialogue: 1,00:00:10.000,00:00:15.000,TOP,,0000,0000,0000,,{\\pos(920,0)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,00:00:10.00,00:00:15.00,TOP,,0000,0000,0000,,{\\pos(920,0)}{\\c&H000000FF}Hello"
     );
   });
 });

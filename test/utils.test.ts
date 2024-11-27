@@ -47,22 +47,22 @@ describe("decimalToHex", () => {
 
 describe("secondsToTimemark", () => {
   it("should convert 3661.123 to 01:01:01.123", () => {
-    expect(secondsToTimemark(3661.123)).toBe("01:01:01.123");
+    expect(secondsToTimemark(3661.123)).toBe("01:01:01.12");
   });
 
   it("should convert 0 to 00:00:00.000", () => {
-    expect(secondsToTimemark(0)).toBe("00:00:00.000");
+    expect(secondsToTimemark(0)).toBe("00:00:00.00");
   });
 
   it("should convert 59.999 to 00:00:59.999", () => {
-    expect(secondsToTimemark(59.999)).toBe("00:00:59.999");
+    expect(secondsToTimemark(59.999)).toBe("00:00:59.99");
   });
 
   it("should convert 3600 to 01:00:00.000", () => {
-    expect(secondsToTimemark(3600)).toBe("01:00:00.000");
+    expect(secondsToTimemark(3600)).toBe("01:00:00.00");
   });
 
   it("should convert 86399.999 to 23:59:59.999", () => {
-    expect(secondsToTimemark(86399.999)).toBe("23:59:59.999");
+    expect(secondsToTimemark(86399.999)).toBe("23:59:59.99");
   });
 });
