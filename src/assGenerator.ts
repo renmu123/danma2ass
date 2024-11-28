@@ -19,6 +19,7 @@ import type {
 export default class AssGenerator {
   data: DanmaKu;
   options: Required<Options>;
+  // TODO: 修改概念为屏幕上的弹幕
   occupiedPositions: {
     TOP: AssLine[];
     BTM: AssLine[];
@@ -44,7 +45,7 @@ export default class AssGenerator {
       opacity: 0,
       shadow: 0.0,
       outline: 0.0,
-      margin: 20,
+      margin: 12,
       blockType: [],
       scrollLimit: [0, 0],
       giftConfig: {
@@ -142,9 +143,15 @@ export default class AssGenerator {
       return [startPosY, endPosY];
     };
 
+    const isTimeOverlap = (pos: AssLine, startTime: number) => {
+      return Math.abs(pos.startTime - startTime) < 0.1;
+    };
+
+    const startTime = item.ts;
+    const endTime = item.ts + this.options.scrollDuration;
     const { width } = this.measureText(item.text);
     const color = this.convertColor(item.color);
-    const startPosX = this.options.width + 10;
+    const startPosX = this.options.width + 10 + width;
     const endPosX = -(width + item.text.length);
 
     const [startPosY, endPosY] = getLimit();
@@ -156,29 +163,17 @@ export default class AssGenerator {
       this.occupiedPositions.R2L.some(
         (pos) =>
           Math.abs(pos.posY - posY) < this.lineDistance &&
-          this.isTimeOverlap(
-            pos,
-            item.ts,
-            item.ts + this.options.scrollDuration
-          )
+          isTimeOverlap(pos, startTime)
       )
     ) {
       posY += this.lineDistance;
       if (posY > endPosY) {
-        // 找到冲突数组中相同 posY 下开始时间最早的那个 posY
-        const earliestPos = this.occupiedPositions.R2L.filter(
-          (pos) => Math.abs(pos.posY - posY) < this.lineDistance
-        )
-          .sort((a, b) => a.startTime - b.startTime)
-          .pop(); // 以时间后面的为准
-
-        if (earliestPos) {
-          posY = earliestPos.posY;
-        } else {
-          console.log(
-            "超出滚动弹幕范围且未找到合适位置，理论上不会出现这个情况"
-          );
-        }
+        // TODO: 额外处理
+        console.log(
+          startTime,
+          "超出滚动弹幕范围且未找到合适位置，理论上不会出现这个情况"
+        );
+        // }
         break;
       }
     }
@@ -191,7 +186,7 @@ export default class AssGenerator {
     const text = `{\\move(${startPosX},${posY},${endPosX},${posY})}${color}${item.text}`;
     return {
       startTime: item.ts,
-      endTime: item.ts + this.options.scrollDuration,
+      endTime: endTime,
       style: item.type,
       text,
       layer: 0,
@@ -309,8 +304,10 @@ export default class AssGenerator {
    * @description 测量文本宽度
    */
   measureText(text: string) {
-    // TODO:和字体大小有关
-    return { width: text.length * 20, height: this.lineDistance };
+    return {
+      width: text.length * Math.floor((this.options.fontsize / 2) * 1.0),
+      height: this.lineDistance,
+    };
   }
 
   /**
@@ -375,7 +372,8 @@ Style: MSG,${this.options.fontname},${this.options.fontsize},${primaryColour},&H
 `;
 
     const events = `[Events]
-Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`;
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+`;
 
     return scriptInfo + v4Styles + events;
   }
@@ -391,8 +389,7 @@ Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text`
    * @description 弹幕高度
    */
   get lineHeight() {
-    // TODO:和字体大小有关
-    return 20;
+    return Math.floor((this.options.fontsize / 2) * 1.4);
   }
 
   /**

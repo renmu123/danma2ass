@@ -81,7 +81,7 @@ export interface Options {
   shadow?: number;
   /** 描边，默认值：0 */
   outline?: number;
-  /** 间距，默认值：20 */
+  /** 间距，默认值：12 */
   margin?: number;
   /** 滚动弹幕距离顶部和底部距离，你可以指定像素或者使用百分比，默认值：[0,0] */
   scrollLimit?: [pxWithPercent, pxWithPercent];

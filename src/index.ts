@@ -51,7 +51,7 @@ const typeMap = {
 function convertXml2Ass(xmlData: string, options: Options = {}) {
   const { danmuku } = parseXmlObj(xmlData);
   const data: TextDanma[] = danmuku.map((item: any) => {
-    const [ts, _, type, color]: [string, string, 1 | 2 | 3 | 4 | 5, string] =
+    const [ts, type, _, color]: [string, string, 1 | 2 | 3 | 4 | 5, string] =
       item["@_p"].split(",");
 
     const parsedTs = parseFloat(ts);
