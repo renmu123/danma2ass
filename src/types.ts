@@ -55,46 +55,53 @@ export type DanmaKu = Array<Danma>;
 type pxWithPercent = string | number;
 
 export interface Options {
-  /** 滚动弹幕持续时间 */
+  /** 滚动弹幕持续时间，默认值：12 */
   scrollDuration?: number;
-  /** 固定弹幕持续时间 */
+  /** 固定弹幕持续时间，默认值：5 */
   fixedDuration?: number;
-  /** 视频宽度 */
+  /** 视频宽度，默认值：1920 */
   width?: number;
-  /** 视频高度 */
+  /** 视频高度，默认值：1080 */
   height?: number;
-  /** 时间偏移，单位秒 */
+  /** 时间偏移，单位秒，默认值：0 */
   timeshift?: number;
   /** 字体 */
   fontname?: string;
-  /** 字体大小 */
+  /** 字体大小，默认值40 */
   fontsize?: number;
-  /** 加粗 */
+  /** 加粗，默认值：false */
   bold?: boolean;
-  /** 斜体 */
+  /** 斜体，默认值：false */
   italic?: boolean;
-  /** 下划线 */
+  /** 下划线，默认值：false */
   underline?: boolean;
-  /** 透明度,0不透明，255全透明 */
+  /** 透明度，0不透明，255全透明，默认值：0 */
   opacity?: number;
-  /** 阴影 */
+  /** 阴影，默认值：0 */
   shadow?: number;
-  /** 描边 */
+  /** 描边，默认值：0 */
   outline?: number;
-  /** 间距 */
+  /** 间距，默认值：20 */
   margin?: number;
-  /** 滚动弹幕距离顶部和底部距离，你可以指定像素或者使用百分比 */
+  /** 滚动弹幕距离顶部和底部距离，你可以指定像素或者使用百分比，默认值：[0,0] */
   scrollLimit?: [pxWithPercent, pxWithPercent];
-  /** 屏蔽类型 */
+  /** 屏蔽类型，默认值[] */
   blockType?: typeEnum[];
   /** 礼物框配置 */
   giftConfig?: {
+    /** 屏蔽的礼物类型 */
     blockType?: GiftTypeEnum[];
+    /** 礼物框宽度 */
     width?: number;
+    /** 礼物框高度 */
     height?: number;
+    /** X轴座标 */
     posX?: number;
+    /** Y轴座标 */
     posY?: number;
+    /** 持续时间 */
     duration?: number;
+    /** 最小价格 */
     minPrice?: number;
   };
 }
