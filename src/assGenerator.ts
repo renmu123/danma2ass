@@ -1,10 +1,23 @@
-import { RGB2BGR, decimalToHex, secondsToTimemark } from "./utils.js";
+import {
+  RGB2BGR,
+  decimalToHex,
+  secondsToTimemark,
+  defaultsDeep,
+  parsePercentage,
+} from "./utils.js";
 
 import { typeEnum } from "./types.js";
-import type { Item, Options, AssLine } from "./types.js";
+import type {
+  Danma,
+  DanmaKu,
+  Options,
+  AssLine,
+  AllOptional,
+  DeepRequired,
+} from "./types.js";
 
 export default class AssGenerator {
-  data: Item[];
+  data: DanmaKu;
   options: Required<Options>;
   occupiedPositions: {
     TOP: AssLine[];
@@ -16,8 +29,8 @@ export default class AssGenerator {
     R2L: [],
   };
 
-  constructor(data: Item[], options: Options) {
-    const defaultOptions = {
+  constructor(data: DanmaKu, options: Options) {
+    const defaultOptions: DeepRequired<AllOptional<Options>> = {
       scrollDuration: 12,
       fixedDuration: 5,
       width: 1920,
@@ -32,13 +45,24 @@ export default class AssGenerator {
       shadow: 0.0,
       outline: 0.0,
       margin: 20,
+      blockType: [],
+      scrollLimit: [0, 0],
+      giftConfig: {
+        width: 1920,
+        height: 500,
+        posX: 20,
+        posY: 0,
+        duration: 5,
+        minPrice: 0,
+        blockType: [],
+      },
     };
-    this.options = Object.assign(defaultOptions, options);
+    this.options = defaultsDeep(defaultOptions, options);
 
     this.data = this.preHandle(data);
   }
 
-  preHandle(data: Item[]) {
+  preHandle(data: DanmaKu) {
     return data.toSorted((a, b) => a.ts - b.ts);
   }
 
@@ -50,19 +74,36 @@ export default class AssGenerator {
       let assLine: AssLine;
       switch (item.type) {
         case typeEnum.R2L:
+          if (this.options.blockType.includes(typeEnum.R2L)) {
+            continue;
+          }
           assLine = this.generateMoveLine(item);
           this.occupiedPositions.R2L.push(assLine);
+          assLines.push(this.generateAssLine(assLine));
           break;
         case typeEnum.TOP:
+          if (this.options.blockType.includes(typeEnum.TOP)) {
+            continue;
+          }
           assLine = this.generateTopLine(item);
           this.occupiedPositions.TOP.push(assLine);
+          assLines.push(this.generateAssLine(assLine));
           break;
         case typeEnum.BTM:
+          if (this.options.blockType.includes(typeEnum.BTM)) {
+            continue;
+          }
           assLine = this.generateBottomLine(item);
           this.occupiedPositions.BTM.push(assLine);
+          assLines.push(this.generateAssLine(assLine));
+          break;
+        case typeEnum.GIFT:
+          if (this.options.blockType.includes(typeEnum.GIFT)) {
+            continue;
+          }
+          // assLine = this.generateGiftLine(item);
           break;
       }
-      assLines.push(this.generateAssLine(assLine));
     }
 
     this.occupiedPositions.TOP = [];
@@ -75,13 +116,40 @@ export default class AssGenerator {
   /**
    * @description 生成滚动弹幕
    */
-  generateMoveLine(item: Item): AssLine {
+  generateMoveLine(item: Danma): AssLine {
+    const getLimit = () => {
+      const startPosYLimit = this.options.scrollLimit[0];
+      const endPosYLimit = this.options.scrollLimit[1];
+
+      let startPosY = 1;
+      if (typeof startPosYLimit === "string") {
+        startPosY += Math.round(
+          this.options.height * parsePercentage(startPosYLimit)
+        );
+      } else {
+        startPosY += startPosYLimit;
+      }
+
+      let endPosY = this.options.height - this.lineDistance;
+      if (typeof endPosYLimit === "string") {
+        endPosY -= Math.round(
+          this.options.height * parsePercentage(endPosYLimit)
+        );
+      } else {
+        endPosY -= endPosYLimit;
+      }
+
+      return [startPosY, endPosY];
+    };
+
     const { width } = this.measureText(item.text);
     const color = this.convertColor(item.color);
     const startPosX = this.options.width + 10;
     const endPosX = -(width + item.text.length);
 
-    let posY = 1;
+    const [startPosY, endPosY] = getLimit();
+
+    let posY = startPosY;
 
     // 确定不冲突的位置
     while (
@@ -96,6 +164,10 @@ export default class AssGenerator {
       )
     ) {
       posY += this.lineDistance;
+      // TODO: 还是有可能会重叠，要根据文本长度优化
+      if (posY > endPosY) {
+        posY = startPosY;
+      }
     }
 
     // 删除已经处理过且不再冲突的数据
@@ -117,7 +189,7 @@ export default class AssGenerator {
   /**
    * @description 生成顶部固定弹幕
    */
-  generateTopLine(item: Item): AssLine {
+  generateTopLine(item: Danma): AssLine {
     const { width } = this.measureText(item.text);
     const posX = (this.options.width - width) / 2;
     const startTime = item.ts;
@@ -156,7 +228,7 @@ export default class AssGenerator {
   /**
    * @description 生成底部固定弹幕
    */
-  generateBottomLine(item: Item): AssLine {
+  generateBottomLine(item: Danma): AssLine {
     const { width } = this.measureText(item.text);
     const posX = (this.options.width - width) / 2;
     const startTime = item.ts;
@@ -191,6 +263,11 @@ export default class AssGenerator {
       posY: posY, // 记录位置
     };
   }
+
+  /**
+   * @description 生成礼物弹幕
+   */
+  // generateGiftLine(item: Danma): AssLine[] {}
 
   /**
    * @description 判断两个时间段是否有重叠

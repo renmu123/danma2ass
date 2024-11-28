@@ -6,7 +6,9 @@
   "main": "./lib/index.js",
   "scripts": {
     "build": "pnpm run test && pnpm run typecheck && tsc",
-    "dev": "tsc -w"
+    "dev": "tsc -w",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
   },
   "keywords": [],
   "author": "",

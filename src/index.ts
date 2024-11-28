@@ -2,7 +2,12 @@ import { XMLParser } from "fast-xml-parser";
 import AssGenerator from "./assGenerator.js";
 import { intToHexColor } from "./utils.js";
 
-import { type Options, type Item, typeEnum } from "./types.js";
+import {
+  type Options,
+  type Danma,
+  type CommonDanma,
+  typeEnum,
+} from "./types.js";
 
 const traversalObject = (
   obj: any,
@@ -61,8 +66,9 @@ const typeMap = {
 
 export function convertXml2Ass(xmlData: string, options: Options = {}) {
   const { danmuku } = parseXmlObj(xmlData);
-  const data: Item[] = danmuku.map((item: any) => {
-    const [ts, _, type, color] = item["@_p"].split(",");
+  const data: CommonDanma[] = danmuku.map((item: any) => {
+    const [ts, _, type, color]: [string, string, 1 | 2 | 3 | 4 | 5, string] =
+      item["@_p"].split(",");
     const parsedTs = parseFloat(ts);
     const text = item["#text"];
     const parsedType = typeMap[type] ?? typeEnum.R2L;
@@ -71,6 +77,7 @@ export function convertXml2Ass(xmlData: string, options: Options = {}) {
     return { ts: parsedTs, text, type: parsedType, color: parsedColor };
   });
 
+  // @ts-ignore
   const generator = new AssGenerator(data, options);
   return generator.convert();
 }

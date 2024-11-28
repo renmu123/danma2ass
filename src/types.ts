@@ -1,14 +1,3 @@
-export interface Item {
-  /** 相对时间戳 */
-  ts: number;
-  /** 文字 */
-  text: string;
-  /** 类型 */
-  type: typeEnum;
-  /** 弹幕颜色，默认为#FFFFFF */
-  color?: string;
-}
-
 export const enum typeEnum {
   /** 从右至左滚动 */
   R2L = "R2L",
@@ -16,7 +5,54 @@ export const enum typeEnum {
   TOP = "TOP",
   /** 下方固定 */
   BTM = "BTM",
+  /** 礼物 */
+  GIFT = "GIFT",
 }
+
+/**
+ * 普通文本弹幕
+ */
+export interface CommonDanma {
+  /** 相对时间戳 */
+  ts: number;
+  /** 文字 */
+  text: string;
+  /** 弹幕颜色，默认为#FFFFFF */
+  color?: string;
+}
+
+export interface TextDanma extends CommonDanma {
+  type: typeEnum.R2L | typeEnum.TOP | typeEnum.BTM;
+}
+
+export const enum GiftTypeEnum {
+  /** 礼物 */
+  GIFT = "gift",
+  /** 舰长 */
+  GUARD = "guard",
+  /** sc */
+  SC = "sc",
+}
+
+/**
+ * 礼物弹幕
+ */
+export interface GiftDanma extends CommonDanma {
+  type: typeEnum.GIFT;
+  /** 礼物名称 */
+  giftName: string;
+  /** 礼物数量 */
+  giftCount: number;
+  /** 赠送人 */
+  sender: string;
+  /** 礼物类型 */
+  giftType: GiftTypeEnum;
+}
+
+export type Danma = TextDanma | GiftDanma;
+export type DanmaKu = Array<Danma>;
+
+type pxWithPercent = string | number;
 
 export interface Options {
   /** 滚动弹幕持续时间 */
@@ -47,6 +83,20 @@ export interface Options {
   outline?: number;
   /** 间距 */
   margin?: number;
+  /** 滚动弹幕距离顶部和底部距离，你可以指定像素或者使用百分比 */
+  scrollLimit?: [pxWithPercent, pxWithPercent];
+  /** 屏蔽类型 */
+  blockType?: typeEnum[];
+  /** 礼物框配置 */
+  giftConfig?: {
+    blockType?: GiftTypeEnum[];
+    width?: number;
+    height?: number;
+    posX?: number;
+    posY?: number;
+    duration?: number;
+    minPrice?: number;
+  };
 }
 
 export interface AssLine {
@@ -55,5 +105,17 @@ export interface AssLine {
   style: typeEnum;
   text: string;
   layer: number;
-  posY?: number;
+  posY: number;
 }
+
+export type AllOptional<T> = {
+  [P in keyof T]?: T[P];
+};
+
+export type DeepPartial<T> = {
+  [P in keyof T]?: DeepPartial<T[P]>;
+};
+
+export type DeepRequired<T> = {
+  [P in keyof T]-?: DeepRequired<T[P]>;
+};
