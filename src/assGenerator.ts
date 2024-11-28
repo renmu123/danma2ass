@@ -167,6 +167,7 @@ export default class AssGenerator {
       // TODO: 还是有可能会重叠，要根据文本长度优化
       if (posY > endPosY) {
         posY = startPosY;
+        break;
       }
     }
 
