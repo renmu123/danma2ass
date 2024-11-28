@@ -198,8 +198,8 @@ export default class AssGenerator {
    * @description 生成顶部固定弹幕
    */
   generateTopLine(item: Danma): AssLine {
-    const { width } = this.measureText(item.text);
-    const posX = (this.options.width - width) / 2;
+    // const { width } = this.measureText(item.text);
+    const posX = this.options.width / 2;
     const startTime = item.ts;
     const endTime = item.ts + this.options.fixedDuration;
     let posY = 0;
@@ -237,8 +237,8 @@ export default class AssGenerator {
    * @description 生成底部固定弹幕
    */
   generateBottomLine(item: Danma): AssLine {
-    const { width } = this.measureText(item.text);
-    const posX = (this.options.width - width) / 2;
+    // const { width } = this.measureText(item.text);
+    const posX = this.options.width / 2;
     const startTime = item.ts;
     const endTime = item.ts + this.options.fixedDuration;
     let posY = this.options.height - this.lineDistance;
