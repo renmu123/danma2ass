@@ -66,8 +66,7 @@ export function convertXml2Ass(xmlData: string, options: Options = {}) {
     const parsedTs = parseFloat(ts);
     const text = item["#text"];
     const parsedType = typeMap[type] ?? typeEnum.R2L;
-    // TODO:颜色有误
-    const parsedColor = `${intToHexColor(color)}`;
+    const parsedColor = `${intToHexColor(Number(color))}`;
 
     return { ts: parsedTs, text, type: parsedType, color: parsedColor };
   });

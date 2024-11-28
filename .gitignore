@@ -1,3 +1,4 @@
 node_modules
 *.xml
 *.ass
+test.ts

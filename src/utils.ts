@@ -24,7 +24,7 @@ export function hexColorToInt(hexColor: string): number {
  * @returns {string} - 十六进制颜色字符串
  */
 export function intToHexColor(int: number): string {
-  const hex = int.toString(16).padStart(6, "0");
+  const hex = int.toString(16).padStart(6, "0").toUpperCase();
   return `#${hex}`;
 }
 

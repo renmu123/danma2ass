@@ -205,6 +205,9 @@ export default class AssGenerator {
   convertColor(color?: string) {
     if (color) {
       const bgrColor = RGB2BGR(color);
+      if (bgrColor === "#FFFFFF") {
+        return "";
+      }
       const opacity = decimalToHex(this.options.opacity);
       return `{\\c&H${opacity}${bgrColor.replace("#", "")}}`;
     } else {
