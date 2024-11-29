@@ -19,7 +19,7 @@ import type {
 export default class AssGenerator {
   data: DanmaKu;
   options: Required<Options>;
-  // TODO: 修改概念为屏幕上的弹幕
+  // 记录当前屏幕上的弹幕位置
   occupiedPositions: {
     TOP: AssLine[];
     BTM: AssLine[];
