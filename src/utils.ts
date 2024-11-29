@@ -54,7 +54,7 @@ export function secondsToTimemark(seconds: number): string {
   const secs = Math.floor(seconds % 60);
   const milliseconds = Math.round((seconds - Math.floor(seconds)) * 1000);
 
-  const hoursStr = hours.toString().padStart(2, "0");
+  const hoursStr = hours.toString();
   const minutesStr = minutes.toString().padStart(2, "0");
   const secondsStr = secs.toString().padStart(2, "0");
   const millisecondsStr = Math.floor(milliseconds / 10)
