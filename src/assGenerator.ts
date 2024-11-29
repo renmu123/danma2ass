@@ -19,7 +19,7 @@ import type {
 export default class AssGenerator {
   data: DanmaKu;
   options: Required<Options>;
-  // 记录当前屏幕上的弹幕位置
+  // 记录当前屏幕上的弹幕
   occupiedPositions: {
     TOP: AssLine[];
     BTM: AssLine[];
@@ -47,7 +47,9 @@ export default class AssGenerator {
       outline: 0.0,
       margin: 12,
       blockType: [],
+      density: 1,
       scrollLimit: [0, 0],
+      fixedLimit: [0, 0],
       giftConfig: {
         width: 1920,
         height: 500,
@@ -72,13 +74,15 @@ export default class AssGenerator {
     const baseAss = this.generateBaseAss();
 
     for (const item of this.data) {
-      let assLine: AssLine;
+      let assLine: AssLine | null = null;
       switch (item.type) {
         case typeEnum.R2L:
           if (this.options.blockType.includes(typeEnum.R2L)) {
             continue;
           }
           assLine = this.generateMoveLine(item);
+          if (!assLine) continue;
+
           assLines.push(this.generateAssLine(assLine));
           break;
         case typeEnum.TOP:
@@ -86,6 +90,8 @@ export default class AssGenerator {
             continue;
           }
           assLine = this.generateTopLine(item);
+          if (!assLine) continue;
+
           assLines.push(this.generateAssLine(assLine));
           break;
         case typeEnum.BTM:
@@ -93,6 +99,8 @@ export default class AssGenerator {
             continue;
           }
           assLine = this.generateBottomLine(item);
+          if (!assLine) continue;
+
           assLines.push(this.generateAssLine(assLine));
           break;
         case typeEnum.GIFT:
@@ -112,36 +120,39 @@ export default class AssGenerator {
   }
 
   /**
+   * @description 获取滚动弹幕的限制范围
+   */
+  getLimit(type: "scroll" | "fixed"): [number, number] {
+    const [startPosYLimit, endPosYLimit] =
+      type === "scroll" ? this.options.scrollLimit : this.options.fixedLimit;
+
+    let startPosY = 1;
+    if (typeof startPosYLimit === "string") {
+      startPosY += Math.round(
+        this.options.height * parsePercentage(startPosYLimit)
+      );
+    } else {
+      startPosY += startPosYLimit;
+    }
+
+    let endPosY = this.options.height - this.lineDistance;
+    if (typeof endPosYLimit === "string") {
+      endPosY -= Math.round(
+        this.options.height * parsePercentage(endPosYLimit)
+      );
+    } else {
+      endPosY -= endPosYLimit;
+    }
+
+    return [startPosY, endPosY];
+  }
+
+  /**
    * @description 生成滚动弹幕
    */
-  generateMoveLine(item: Danma): AssLine {
-    const getLimit = () => {
-      const startPosYLimit = this.options.scrollLimit[0];
-      const endPosYLimit = this.options.scrollLimit[1];
-
-      let startPosY = 1;
-      if (typeof startPosYLimit === "string") {
-        startPosY += Math.round(
-          this.options.height * parsePercentage(startPosYLimit)
-        );
-      } else {
-        startPosY += startPosYLimit;
-      }
-
-      let endPosY = this.options.height - this.lineDistance;
-      if (typeof endPosYLimit === "string") {
-        endPosY -= Math.round(
-          this.options.height * parsePercentage(endPosYLimit)
-        );
-      } else {
-        endPosY -= endPosYLimit;
-      }
-
-      return [startPosY, endPosY];
-    };
-
+  generateMoveLine(item: Danma): AssLine | null {
     const isTimeOverlap = (pos: AssLine, startTime: number) => {
-      return Math.abs(pos.startTime - startTime) < 0.1;
+      return Math.abs(pos.startTime - startTime) < 1.5;
     };
 
     const startTime = item.ts;
@@ -150,7 +161,7 @@ export default class AssGenerator {
     const color = this.convertColor(item.color);
     const startPosX = this.options.width + 10 + width;
     const endPosX = -(width + item.text.length);
-    const [startPosY, endPosY] = getLimit();
+    const [startPosY, endPosY] = this.getLimit("scroll");
     let posY = startPosY;
 
     // 删除不在当前屏幕上的数据
@@ -158,7 +169,7 @@ export default class AssGenerator {
       (pos) => pos.endTime > item.ts
     );
 
-    // 确定不冲突的位置
+    // 确定位置
     while (
       this.occupiedPositions.R2L.some(
         (pos) =>
@@ -168,10 +179,17 @@ export default class AssGenerator {
     ) {
       posY += this.lineDistance;
 
-      // TODO:需要处理超过限制的情况
+      // 超过了密度上限
       if (posY > endPosY) {
-        console.log(startTime, "超出滚动弹幕范围且未找到合适位置");
-        break;
+        if (this.options.density === 1) {
+          // 清空屏内弹幕
+          this.occupiedPositions.R2L = [];
+          break;
+        } else if (this.options.density === 2) {
+          return null;
+        } else {
+          throw new Error("not support density");
+        }
       }
     }
 
@@ -192,28 +210,38 @@ export default class AssGenerator {
   /**
    * @description 生成顶部固定弹幕
    */
-  generateTopLine(item: Danma): AssLine {
-    // const { width } = this.measureText(item.text);
+  generateTopLine(item: Danma): AssLine | null {
     const posX = this.options.width / 2;
     const startTime = item.ts;
     const endTime = item.ts + this.options.fixedDuration;
-    let posY = 0;
-
+    const [startPosY, endPosY] = this.getLimit("fixed");
     const color = this.convertColor(item.color);
+    let posY = startPosY;
 
     // 删除不在当前屏幕上的数据
     this.occupiedPositions.TOP = this.occupiedPositions.TOP.filter(
       (pos) => pos.endTime > startTime
     );
 
-    // 确定不冲突的位置
+    // 确定位置
     while (
       this.occupiedPositions.TOP.some(
         (pos) => Math.abs(pos.posY - posY) < this.lineDistance
       )
     ) {
       posY += this.lineDistance;
-      // TODO:需要处理超过限制的情况
+      // 超过了密度上限
+      if (posY > endPosY) {
+        if (this.options.density === 1) {
+          // 清空屏内弹幕
+          this.occupiedPositions.TOP = [];
+          break;
+        } else if (this.options.density === 2) {
+          return null;
+        } else {
+          throw new Error("not support density");
+        }
+      }
     }
 
     const text = `{\\pos(${posX},${posY})}${color}${item.text}`;
@@ -233,28 +261,39 @@ export default class AssGenerator {
   /**
    * @description 生成底部固定弹幕
    */
-  generateBottomLine(item: Danma): AssLine {
-    // const { width } = this.measureText(item.text);
+  generateBottomLine(item: Danma): AssLine | null {
     const posX = this.options.width / 2;
     const startTime = item.ts;
     const endTime = item.ts + this.options.fixedDuration;
-    let posY = this.options.height - this.lineDistance;
-
+    const [startPosY, endPosY] = this.getLimit("fixed");
     const color = this.convertColor(item.color);
+
+    let posY = endPosY - this.lineDistance;
 
     // 删除不在当前屏幕上的数据
     this.occupiedPositions.BTM = this.occupiedPositions.BTM.filter(
       (pos) => pos.endTime > startTime
     );
 
-    // 确定不冲突的位置
+    // 确定位置
     while (
       this.occupiedPositions.BTM.some(
         (pos) => Math.abs(pos.posY - posY) < this.lineDistance
       )
     ) {
       posY -= this.lineDistance;
-      // TODO:需要处理超过限制的情况
+      // 超过了密度上限
+      if (posY < startPosY) {
+        if (this.options.density === 1) {
+          // 清空屏内弹幕
+          this.occupiedPositions.BTM = [];
+          break;
+        } else if (this.options.density === 2) {
+          return null;
+        } else {
+          throw new Error("not support density");
+        }
+      }
     }
 
     const text = `{\\pos(${posX},${posY})}${color}${item.text}`;
@@ -338,11 +377,14 @@ export default class AssGenerator {
    * @description 生成ass头
    */
   generateBaseAss() {
-    const bold = this.options.bold ? 1 : 0;
-    const italic = this.options.italic ? 1 : 0;
-    const underline = this.options.underline ? 1 : 0;
+    const bold = this.options.bold ? -1 : 0;
+    const italic = this.options.italic ? -1 : 0;
+    const underline = this.options.underline ? -1 : 0;
     const opacity = decimalToHex(this.options.opacity);
     const primaryColour = `&H${opacity}FFFFFF`;
+    const outlineColour = `&H00000000`;
+    const backColour = `&H1E6A5149`;
+
     const shadow = this.options.shadow;
     const outline = this.options.outline;
 
@@ -361,12 +403,11 @@ ScaledBorderAndShadow: yes
     const v4Styles = `[V4+ Styles]
 Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
 
-Style: R2L,${this.options.fontname},${this.options.fontsize},${primaryColour},&H00FFFFFF,&H00000000,&H1E6A5149,${bold},${italic},${underline},0,100.00,100.00,0.00,0.00,1,${outline},${shadow},8,0,0,0,1
-Style: L2R,${this.options.fontname},${this.options.fontsize},${primaryColour},&H00FFFFFF,&H00000000,&H1E6A5149,${bold},${italic},${underline},0,100.00,100.00,0.00,0.00,1,${outline},${shadow},8,0,0,0,1
-Style: TOP,${this.options.fontname},${this.options.fontsize},${primaryColour},&H00FFFFFF,&H00000000,&H1E6A5149,${bold},${italic},${underline},0,100.00,100.00,0.00,0.00,1,${outline},${shadow},8,0,0,0,1
-Style: BTM,${this.options.fontname},${this.options.fontsize},${primaryColour},&H00FFFFFF,&H00000000,&H1E6A5149,${bold},${italic},${underline},0,100.00,100.00,0.00,0.00,1,${outline},${shadow},8,0,0,0,1
-Style: SP,${this.options.fontname},${this.options.fontsize},${primaryColour},&H00FFFFFF,&H00000000,&H1E6A5149,${bold},${italic},${underline},0,100.00,100.00,0.00,0.00,1,${outline},${shadow},7,0,0,0,1
-Style: MSG,${this.options.fontname},${this.options.fontsize},${primaryColour},&H00FFFFFF,&H00000000,&H1E6A5149,${bold},${italic},${underline},0,100.00,100.00,0.00,0.00,1,0.0,0.9,7,0,0,0,1
+Style: R2L,${this.options.fontname},${this.options.fontsize},${primaryColour},&H00FFFFFF,${outlineColour},${backColour},${bold},${italic},${underline},0,100.00,100.00,0.00,0.00,1,${outline},${shadow},8,0,0,0,1
+Style: L2R,${this.options.fontname},${this.options.fontsize},${primaryColour},&H00FFFFFF,${outlineColour},${backColour},${bold},${italic},${underline},0,100.00,100.00,0.00,0.00,1,${outline},${shadow},8,0,0,0,1
+Style: TOP,${this.options.fontname},${this.options.fontsize},${primaryColour},&H00FFFFFF,${outlineColour},${backColour},${bold},${italic},${underline},0,100.00,100.00,0.00,0.00,1,${outline},${shadow},8,0,0,0,1
+Style: BTM,${this.options.fontname},${this.options.fontsize},${primaryColour},&H00FFFFFF,${outlineColour},${backColour},${bold},${italic},${underline},0,100.00,100.00,0.00,0.00,1,${outline},${shadow},8,0,0,0,1
+Style: MSG,${this.options.fontname},${this.options.fontsize},${primaryColour},&H00FFFFFF,${outlineColour},${backColour},${bold},${italic},${underline},0,100.00,100.00,0.00,0.00,1,0.0,0.9,7,0,0,0,1
 
 `;
 

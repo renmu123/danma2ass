@@ -83,8 +83,12 @@ export interface Options {
   outline?: number;
   /** 间距，默认值：12 */
   margin?: number;
+  /** 弹幕密度，1: 无限，2: 不重叠，默认为1 */
+  density?: 1 | 2;
   /** 滚动弹幕距离顶部和底部距离，你可以指定像素或者使用百分比，默认值：[0,0] */
   scrollLimit?: [pxWithPercent, pxWithPercent];
+  /** 固定弹幕距离顶部和底部距离，你可以指定像素或者使用百分比，默认值：[0,0]  */
+  fixedLimit?: [pxWithPercent, pxWithPercent];
   /** 屏蔽类型，默认值[] */
   blockType?: typeEnum[];
   /** 礼物框配置 */
