@@ -103,13 +103,36 @@ describe("AssGenerator", () => {
     const generator = new AssGenerator(data, options);
     const ass = generator.convert();
     expect(ass).toContain(
-      "Dialogue: 1,0:00:01.00,0:00:06.00,TOP,,0000,0000,0000,,{\\pos(960,0)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,0:00:01.00,0:00:06.00,TOP,,0000,0000,0000,,{\\pos(960,1)}{\\c&H000000FF}Hello"
     );
     expect(ass).toContain(
-      "Dialogue: 1,0:00:02.00,0:00:07.00,TOP,,0000,0000,0000,,{\\pos(960,33)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,0:00:02.00,0:00:07.00,TOP,,0000,0000,0000,,{\\pos(960,34)}{\\c&H000000FF}Hello"
     );
     expect(ass).toContain(
-      "Dialogue: 1,0:00:10.00,0:00:15.00,TOP,,0000,0000,0000,,{\\pos(960,0)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,0:00:10.00,0:00:15.00,TOP,,0000,0000,0000,,{\\pos(960,1)}{\\c&H000000FF}Hello"
+    );
+  });
+  it("should convert data with overlap TOP and BTM conflict", () => {
+    const data: Danma[] = [
+      { ts: 1, text: "Hello", type: typeEnum.TOP, color: "#FF0000" },
+      { ts: 2, text: "Hello", type: typeEnum.TOP, color: "#FF0000" },
+      { ts: 3, text: "Hello", type: typeEnum.BTM, color: "#FF0000" },
+    ];
+    const generator = new AssGenerator(data, {
+      ...options,
+      height: 90,
+      density: 2,
+    });
+    const ass = generator.convert();
+    console.log(ass);
+    expect(ass).toContain(
+      "Dialogue: 1,0:00:01.00,0:00:06.00,TOP,,0000,0000,0000,,{\\pos(960,1)}{\\c&H000000FF}Hello"
+    );
+    expect(ass).toContain(
+      "Dialogue: 1,0:00:02.00,0:00:07.00,TOP,,0000,0000,0000,,{\\pos(960,34)}{\\c&H000000FF}Hello"
+    );
+    expect(ass).not.toContain(
+      "Dialogue: 1,0:00:10.00,0:00:15.00,TOP,,0000,0000,0000,,{\\pos(960,24)}{\\c&H000000FF}Hello"
     );
   });
 });

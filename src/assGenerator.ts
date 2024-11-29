@@ -21,12 +21,10 @@ export default class AssGenerator {
   options: Required<Options>;
   // 记录当前屏幕上的弹幕
   occupiedPositions: {
-    TOP: AssLine[];
-    BTM: AssLine[];
+    FIXED: AssLine[];
     R2L: AssLine[];
   } = {
-    TOP: [],
-    BTM: [],
+    FIXED: [],
     R2L: [],
   };
 
@@ -112,8 +110,7 @@ export default class AssGenerator {
       }
     }
 
-    this.occupiedPositions.TOP = [];
-    this.occupiedPositions.BTM = [];
+    this.occupiedPositions.FIXED = [];
     this.occupiedPositions.R2L = [];
 
     return baseAss + assLines.join("\n");
@@ -219,13 +216,13 @@ export default class AssGenerator {
     let posY = startPosY;
 
     // 删除不在当前屏幕上的数据
-    this.occupiedPositions.TOP = this.occupiedPositions.TOP.filter(
+    this.occupiedPositions.FIXED = this.occupiedPositions.FIXED.filter(
       (pos) => pos.endTime > startTime
     );
 
     // 确定位置
     while (
-      this.occupiedPositions.TOP.some(
+      this.occupiedPositions.FIXED.some(
         (pos) => Math.abs(pos.posY - posY) < this.lineDistance
       )
     ) {
@@ -234,7 +231,7 @@ export default class AssGenerator {
       if (posY > endPosY) {
         if (this.options.density === 1) {
           // 清空屏内弹幕
-          this.occupiedPositions.TOP = [];
+          this.occupiedPositions.FIXED = [];
           break;
         } else if (this.options.density === 2) {
           return null;
@@ -253,7 +250,7 @@ export default class AssGenerator {
       layer: 1,
       posY: posY, // 记录位置
     };
-    this.occupiedPositions.TOP.push(assLine);
+    this.occupiedPositions.FIXED.push(assLine);
 
     return assLine;
   }
@@ -271,13 +268,13 @@ export default class AssGenerator {
     let posY = endPosY - this.lineDistance;
 
     // 删除不在当前屏幕上的数据
-    this.occupiedPositions.BTM = this.occupiedPositions.BTM.filter(
+    this.occupiedPositions.FIXED = this.occupiedPositions.FIXED.filter(
       (pos) => pos.endTime > startTime
     );
 
     // 确定位置
     while (
-      this.occupiedPositions.BTM.some(
+      this.occupiedPositions.FIXED.some(
         (pos) => Math.abs(pos.posY - posY) < this.lineDistance
       )
     ) {
@@ -286,7 +283,7 @@ export default class AssGenerator {
       if (posY < startPosY) {
         if (this.options.density === 1) {
           // 清空屏内弹幕
-          this.occupiedPositions.BTM = [];
+          this.occupiedPositions.FIXED = [];
           break;
         } else if (this.options.density === 2) {
           return null;
@@ -305,7 +302,7 @@ export default class AssGenerator {
       layer: 1,
       posY: posY, // 记录位置
     };
-    this.occupiedPositions.BTM.push(assLine);
+    this.occupiedPositions.FIXED.push(assLine);
 
     return assLine;
   }
