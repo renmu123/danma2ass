@@ -79,7 +79,6 @@ export default class AssGenerator {
             continue;
           }
           assLine = this.generateMoveLine(item);
-          this.occupiedPositions.R2L.push(assLine);
           assLines.push(this.generateAssLine(assLine));
           break;
         case typeEnum.TOP:
@@ -87,7 +86,6 @@ export default class AssGenerator {
             continue;
           }
           assLine = this.generateTopLine(item);
-          this.occupiedPositions.TOP.push(assLine);
           assLines.push(this.generateAssLine(assLine));
           break;
         case typeEnum.BTM:
@@ -95,7 +93,6 @@ export default class AssGenerator {
             continue;
           }
           assLine = this.generateBottomLine(item);
-          this.occupiedPositions.BTM.push(assLine);
           assLines.push(this.generateAssLine(assLine));
           break;
         case typeEnum.GIFT:
@@ -153,10 +150,13 @@ export default class AssGenerator {
     const color = this.convertColor(item.color);
     const startPosX = this.options.width + 10 + width;
     const endPosX = -(width + item.text.length);
-
     const [startPosY, endPosY] = getLimit();
-
     let posY = startPosY;
+
+    // 删除不在当前屏幕上的数据
+    this.occupiedPositions.R2L = this.occupiedPositions.R2L.filter(
+      (pos) => pos.endTime > item.ts
+    );
 
     // 确定不冲突的位置
     while (
@@ -167,31 +167,26 @@ export default class AssGenerator {
       )
     ) {
       posY += this.lineDistance;
+
+      // TODO:需要处理超过限制的情况
       if (posY > endPosY) {
-        // TODO: 额外处理
-        console.log(
-          startTime,
-          "超出滚动弹幕范围且未找到合适位置，理论上不会出现这个情况"
-        );
-        // }
+        console.log(startTime, "超出滚动弹幕范围且未找到合适位置");
         break;
       }
     }
 
-    // 删除已经处理过且不再冲突的数据
-    this.occupiedPositions.R2L = this.occupiedPositions.R2L.filter(
-      (pos) => pos.endTime > item.ts
-    );
-
     const text = `{\\move(${startPosX},${posY},${endPosX},${posY})}${color}${item.text}`;
-    return {
+    const assLine = {
       startTime: item.ts,
       endTime: endTime,
       style: item.type,
       text,
       layer: 0,
-      posY: posY, // 记录位置
+      posY: posY,
     };
+    this.occupiedPositions.R2L.push(assLine);
+
+    return assLine;
   }
 
   /**
@@ -206,24 +201,23 @@ export default class AssGenerator {
 
     const color = this.convertColor(item.color);
 
-    // 确定不冲突的位置
-    while (
-      this.occupiedPositions.TOP.some(
-        (pos) =>
-          Math.abs(pos.posY - posY) < this.lineDistance &&
-          this.isTimeOverlap(pos, startTime, endTime)
-      )
-    ) {
-      posY += this.lineDistance;
-    }
-
-    // 删除已经处理过且不再冲突的数据
+    // 删除不在当前屏幕上的数据
     this.occupiedPositions.TOP = this.occupiedPositions.TOP.filter(
       (pos) => pos.endTime > startTime
     );
 
+    // 确定不冲突的位置
+    while (
+      this.occupiedPositions.TOP.some(
+        (pos) => Math.abs(pos.posY - posY) < this.lineDistance
+      )
+    ) {
+      posY += this.lineDistance;
+      // TODO:需要处理超过限制的情况
+    }
+
     const text = `{\\pos(${posX},${posY})}${color}${item.text}`;
-    return {
+    const assLine = {
       startTime: startTime,
       endTime: endTime,
       style: item.type,
@@ -231,6 +225,9 @@ export default class AssGenerator {
       layer: 1,
       posY: posY, // 记录位置
     };
+    this.occupiedPositions.TOP.push(assLine);
+
+    return assLine;
   }
 
   /**
@@ -245,24 +242,23 @@ export default class AssGenerator {
 
     const color = this.convertColor(item.color);
 
-    // 确定不冲突的位置
-    while (
-      this.occupiedPositions.BTM.some(
-        (pos) =>
-          Math.abs(pos.posY - posY) < this.lineDistance &&
-          this.isTimeOverlap(pos, startTime, endTime)
-      )
-    ) {
-      posY -= this.lineDistance;
-    }
-
-    // 删除已经处理过且不再冲突的数据
+    // 删除不在当前屏幕上的数据
     this.occupiedPositions.BTM = this.occupiedPositions.BTM.filter(
       (pos) => pos.endTime > startTime
     );
 
+    // 确定不冲突的位置
+    while (
+      this.occupiedPositions.BTM.some(
+        (pos) => Math.abs(pos.posY - posY) < this.lineDistance
+      )
+    ) {
+      posY -= this.lineDistance;
+      // TODO:需要处理超过限制的情况
+    }
+
     const text = `{\\pos(${posX},${posY})}${color}${item.text}`;
-    return {
+    const assLine = {
       startTime: startTime,
       endTime: endTime,
       style: item.type,
@@ -270,6 +266,9 @@ export default class AssGenerator {
       layer: 1,
       posY: posY, // 记录位置
     };
+    this.occupiedPositions.BTM.push(assLine);
+
+    return assLine;
   }
 
   /**
