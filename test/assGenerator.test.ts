@@ -69,10 +69,10 @@ describe("AssGenerator", () => {
       "Dialogue: 0,0:00:01.00,0:00:11.00,R2L,,0000,0000,0000,,{\\move(2005,1,-80,1)}{\\c&H000000FF}Hello"
     );
     expect(ass).toContain(
-      "Dialogue: 1,0:00:02.00,0:00:07.00,TOP,,0000,0000,0000,,{\\pos(960,0)}{\\c&H0000FF00}World"
+      "Dialogue: 1,0:00:02.00,0:00:07.00,TOP,,0000,0000,0000,,{\\pos(960,1)}{\\c&H0000FF00}World"
     );
     expect(ass).toContain(
-      "Dialogue: 1,0:00:03.00,0:00:08.00,BTM,,0000,0000,0000,,{\\pos(960,1047)}{\\c&H00FF0000}Test"
+      "Dialogue: 1,0:00:03.00,0:00:08.00,BTM,,0000,0000,0000,,{\\pos(960,1014)}{\\c&H00FF0000}Test"
     );
   });
   it("should convert data with overlap BTM type", () => {
@@ -84,13 +84,13 @@ describe("AssGenerator", () => {
     const generator = new AssGenerator(data, options);
     const ass = generator.convert();
     expect(ass).toContain(
-      "Dialogue: 1,0:00:01.00,0:00:06.00,BTM,,0000,0000,0000,,{\\pos(960,1047)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,0:00:01.00,0:00:06.00,BTM,,0000,0000,0000,,{\\pos(960,1014)}{\\c&H000000FF}Hello"
     );
     expect(ass).toContain(
-      "Dialogue: 1,0:00:02.00,0:00:07.00,BTM,,0000,0000,0000,,{\\pos(960,1014)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,0:00:02.00,0:00:07.00,BTM,,0000,0000,0000,,{\\pos(960,981)}{\\c&H000000FF}Hello"
     );
     expect(ass).toContain(
-      "Dialogue: 1,0:00:03.00,0:00:08.00,BTM,,0000,0000,0000,,{\\pos(960,981)}{\\c&H000000FF}Hello"
+      "Dialogue: 1,0:00:03.00,0:00:08.00,BTM,,0000,0000,0000,,{\\pos(960,948)}{\\c&H000000FF}Hello"
     );
   });
 

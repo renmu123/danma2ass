@@ -14,6 +14,7 @@ import type {
   AssLine,
   AllOptional,
   DeepRequired,
+  GiftDanma,
 } from "./types.js";
 
 export default class AssGenerator {
@@ -101,19 +102,98 @@ export default class AssGenerator {
 
           assLines.push(this.generateAssLine(assLine));
           break;
-        case typeEnum.GIFT:
-          if (this.options.blockType.includes(typeEnum.GIFT)) {
-            continue;
-          }
-          // assLine = this.generateGiftLine(item);
-          break;
+        // case typeEnum.GIFT:
+        //   if (this.options.blockType.includes(typeEnum.GIFT)) {
+        //     continue;
+        //   }
+        //   assLine = this.generateGiftLine(item);
+        //   break;
       }
+    }
+
+    // 构建礼物弹幕
+    if (!this.options.blockType.includes(typeEnum.GIFT)) {
+      const giftDanmaKu = this.data.filter(
+        (item) => item.type === typeEnum.GIFT
+      );
+      const lines = this.generateGift(giftDanmaKu);
+      assLines.push(...lines.map((line) => this.generateAssLine(line)));
     }
 
     this.occupiedPositions.FIXED = [];
     this.occupiedPositions.R2L = [];
 
     return baseAss + assLines.join("\n");
+  }
+
+  /**
+   * @description 生成礼物弹幕
+   */
+  generateGift(data: GiftDanma[]): AssLine[] {
+    const { posX, duration, posY, height } = this.options.giftConfig;
+    const initialPosY = this.options.height - posY - this.lineDistance;
+    const maxHeight = Math.min(posY + height, this.options.height);
+    let screenList: {
+      text: string;
+      height: number;
+    }[] = [];
+    const result: AssLine[] = [];
+
+    for (let i = 0; i < data.length; i++) {
+      const currentItem = data[i];
+      if (this.options.giftConfig.blockType.includes(currentItem.giftType)) {
+        continue;
+      }
+      const nextItem = data[i + 1];
+
+      if (nextItem) {
+        for (let j = 0; j < screenList.length; j++) {
+          screenList[j].height -= this.lineDistance;
+
+          result.push({
+            startTime: currentItem.ts,
+            endTime: currentItem.ts + duration,
+            style: "MSG",
+            text: `{\\pos(${posX},${screenList[j].height})}${screenList[j].text}`,
+            layer: 2,
+            posY: screenList[j].height,
+          });
+        }
+
+        result.push({
+          startTime: currentItem.ts,
+          endTime: currentItem.ts + duration,
+          style: "MSG",
+          text: `{\\pos(${posX},${initialPosY})}${currentItem.text}`,
+          layer: 2,
+          posY: initialPosY,
+        });
+        screenList.push({
+          text: currentItem.text,
+          height: initialPosY,
+        });
+      } else {
+        // 最后一个弹幕，屏幕内的弹幕设置时间为无限长
+        for (let j = 0; j < screenList.length; j++) {
+          result.push({
+            startTime: currentItem.ts,
+            endTime: 60 * 60 * 99,
+            style: "MSG",
+            text: `{\\pos(${posX},${screenList[j].height})}${screenList[j].text}`,
+            layer: 2,
+            posY: screenList[j].height,
+          });
+        }
+      }
+
+      // if (screenList.length > 8) {
+      //   screenList.shift();
+      // }
+      // 删除已经消失的弹幕
+      screenList = screenList.filter((item) => item.height > maxHeight);
+    }
+
+    return result;
   }
 
   /**
@@ -194,11 +274,11 @@ export default class AssGenerator {
     const assLine = {
       startTime: item.ts,
       endTime: endTime,
-      style: item.type,
+      style: typeEnum.R2L,
       text,
       layer: 0,
       posY: posY,
-    };
+    } as const;
     this.occupiedPositions.R2L.push(assLine);
 
     return assLine;
@@ -245,11 +325,11 @@ export default class AssGenerator {
     const assLine = {
       startTime: startTime,
       endTime: endTime,
-      style: item.type,
+      style: typeEnum.TOP,
       text,
       layer: 1,
       posY: posY, // 记录位置
-    };
+    } as const;
     this.occupiedPositions.FIXED.push(assLine);
 
     return assLine;
@@ -297,11 +377,11 @@ export default class AssGenerator {
     const assLine = {
       startTime: startTime,
       endTime: endTime,
-      style: item.type,
+      style: typeEnum.BTM,
       text,
       layer: 1,
       posY: posY, // 记录位置
-    };
+    } as const;
     this.occupiedPositions.FIXED.push(assLine);
 
     return assLine;
@@ -348,13 +428,7 @@ export default class AssGenerator {
   /**
    * @description 生成ass行
    */
-  generateAssLine(options: {
-    startTime: number;
-    endTime: number;
-    style: typeEnum;
-    text: string;
-    layer: number;
-  }) {
+  generateAssLine(options: AssLine) {
     const { startTime, endTime, style, text, layer } = options;
 
     let shiftStartTime = startTime + this.options.timeshift;

@@ -47,6 +47,8 @@ export interface GiftDanma extends CommonDanma {
   sender: string;
   /** 礼物类型 */
   giftType: GiftTypeEnum;
+  /** 礼物价格 */
+  price?: number;
 }
 
 export type Danma = TextDanma | GiftDanma;
@@ -99,9 +101,9 @@ export interface Options {
     width?: number;
     /** 礼物框高度 */
     height?: number;
-    /** X轴座标 */
+    /** X轴坐标，左下角为原点 */
     posX?: number;
-    /** Y轴座标 */
+    /** Y轴坐标，左下角为原点 */
     posY?: number;
     /** 持续时间 */
     duration?: number;
@@ -113,7 +115,7 @@ export interface Options {
 export interface AssLine {
   startTime: number;
   endTime: number;
-  style: typeEnum;
+  style: typeEnum.BTM | typeEnum.TOP | typeEnum.R2L | "MSG";
   text: string;
   layer: number;
   posY: number;
