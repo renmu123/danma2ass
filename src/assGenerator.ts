@@ -130,6 +130,14 @@ export default class AssGenerator {
    * @description 生成礼物弹幕
    */
   generateGift(data: GiftDanma[]): AssLine[] {
+    function generateGiftText(item: { height: number; text: string }) {
+      return `{\\pos(${posX},${item.height})}${item.text}`;
+    }
+
+    function generateGift(item: { height: number; text: string }) {
+      return generateGiftText(item);
+    }
+
     const { posX, duration, posY, height } = this.options.giftConfig;
     const initialPosY = this.options.height - posY - this.lineDistance;
     const maxHeight = Math.min(posY + height, this.options.height);
@@ -154,7 +162,7 @@ export default class AssGenerator {
             startTime: currentItem.ts,
             endTime: currentItem.ts + duration,
             style: "MSG",
-            text: `{\\pos(${posX},${screenList[j].height})}${screenList[j].text}`,
+            text: generateGift(screenList[j]),
             layer: 2,
             posY: screenList[j].height,
           });
@@ -164,12 +172,16 @@ export default class AssGenerator {
           startTime: currentItem.ts,
           endTime: currentItem.ts + duration,
           style: "MSG",
-          text: `{\\pos(${posX},${initialPosY})}${currentItem.text}`,
+          // text: `{\\pos(${posX},${initialPosY})}${currentItem.text}`,
+          text: generateGift({
+            height: initialPosY,
+            text: currentItem.text,
+          }),
           layer: 2,
           posY: initialPosY,
         });
         screenList.push({
-          text: currentItem.text,
+          text: `${currentItem.sender}：${currentItem.giftName} x${currentItem.giftCount}`,
           height: initialPosY,
         });
       } else {
@@ -179,7 +191,7 @@ export default class AssGenerator {
             startTime: currentItem.ts,
             endTime: 60 * 60 * 99,
             style: "MSG",
-            text: `{\\pos(${posX},${screenList[j].height})}${screenList[j].text}`,
+            text: generateGift(screenList[j]),
             layer: 2,
             posY: screenList[j].height,
           });

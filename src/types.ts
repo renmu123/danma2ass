@@ -39,6 +39,7 @@ export const enum GiftTypeEnum {
  */
 export interface GiftDanma extends CommonDanma {
   type: typeEnum.GIFT;
+  text: "";
   /** 礼物名称 */
   giftName: string;
   /** 礼物数量 */
